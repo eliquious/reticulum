@@ -7,6 +7,12 @@ type Layer interface {
 	GetResponse() []LayerResponse
 }
 
+// LossLayer extends the Layer interface with the Loss function
+type LossLayer interface {
+	Layer
+	Loss(index int)
+}
+
 // LayerResponse represents the layer parameters (weights) and gradients.
 type LayerResponse struct {
 	Weights    []float64
