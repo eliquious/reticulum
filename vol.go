@@ -75,9 +75,11 @@ func NewVolume(sx, sy, depth int, optFuncs ...VolumeOptionFunc) *Volume {
 		// weight normalization is done to equalize the output
 		// variance of every neuron, otherwise neurons with a lot
 		// of incoming connections have outputs of larger variance
-		scale := math.Sqrt(1.0 / float64(n))
+		desiredStdDev := math.Sqrt(1.0 / float64(n))
 		for i := 0; i < n; i++ {
-			w[i] = rand.Float64() * scale
+
+			// Gaussian distribution with a mean of 0 and the given stdev
+			w[i] = rand.NormFloat64() * desiredStdDev
 		}
 	}
 
