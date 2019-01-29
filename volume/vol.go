@@ -1,4 +1,4 @@
-package reticulum
+package volume
 
 import (
 	"math"
@@ -101,6 +101,10 @@ type Volume struct {
 	dw    []float64
 }
 
+func (v *Volume) Size() int {
+	return v.n
+}
+
 // getIndex returns the array index for the given position.
 func (v *Volume) getIndex(x, y, d int) int {
 	return ((v.sx*y)+x)*v.depth + d
@@ -116,9 +120,29 @@ func (v *Volume) Set(x, y, d int, val float64) {
 	v.w[v.getIndex(x, y, d)] = val
 }
 
+// GetByIndex returns a weight for the given index in the Volume.
+func (v *Volume) GetByIndex(index int) float64 {
+	return v.w[index]
+}
+
+// SetByIndex updates the position in the Volume by index.
+func (v *Volume) SetByIndex(index int, val float64) {
+	v.w[index] = val
+}
+
 // Add adds the given value to the weight for the given position.
 func (v *Volume) Add(x, y, d int, val float64) {
 	v.w[v.getIndex(x, y, d)] += val
+}
+
+// Mult multiplies the given value to the weight for the given position.
+func (v *Volume) Mult(x, y, d int, val float64) {
+	v.w[v.getIndex(x, y, d)] *= val
+}
+
+// MultByIndex multiplies the given value to the weight for the given index position.
+func (v *Volume) MultByIndex(index int, val float64) {
+	v.w[index] *= val
 }
 
 // GetGrad returns the gradient at the given position.
@@ -129,6 +153,16 @@ func (v *Volume) GetGrad(x, y, d int) float64 {
 // SetGrad updates the gradient at the given position.
 func (v *Volume) SetGrad(x, y, d int, val float64) {
 	v.dw[v.getIndex(x, y, d)] = val
+}
+
+// GetGradByIndex returns a gradient for the given index in the Volume.
+func (v *Volume) GetGradByIndex(index int) float64 {
+	return v.dw[index]
+}
+
+// SetGradByIndex updates the gradient position in the Volume by index.
+func (v *Volume) SetGradByIndex(index int, val float64) {
+	v.dw[index] = val
 }
 
 // AddGrad adds the given value to the gradient for the given position.
@@ -159,6 +193,13 @@ func (v *Volume) AddFrom(vol *Volume) {
 func (v *Volume) AddFromScaled(vol *Volume, scale float64) {
 	for i := 0; i < v.n; i++ {
 		v.w[i] += vol.w[i] * scale
+	}
+}
+
+// ZeroGrad sets the gradients to 0.
+func (v *Volume) ZeroGrad() {
+	for i := 0; i < v.n; i++ {
+		v.dw[i] = 0.0
 	}
 }
 
