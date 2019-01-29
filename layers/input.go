@@ -4,7 +4,7 @@ import "github.com/eliquious/reticulum/volume"
 
 // NewInputLayer creates a new input layer.
 func NewInputLayer(depth int) Layer {
-	return &inputLayer{1, 1, depth, nil, nil}
+	return &InputLayer{1, 1, depth, nil, nil}
 }
 
 type InputLayer struct {

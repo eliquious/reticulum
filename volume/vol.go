@@ -209,3 +209,13 @@ func (v *Volume) SetConst(val float64) {
 		v.w[i] = val
 	}
 }
+
+// Weights returns all the weights for the volume.
+func (v *Volume) Weights() []float64 {
+	return v.w
+}
+
+// Gradients returns all the gradients for the volume.
+func (v *Volume) Gradients() []float64 {
+	return v.dw
+}

@@ -1,17 +1,21 @@
 package layers
 
-import "github.com/eliquious/reticulum/volume"
+import (
+	"math/rand"
+
+	"github.com/eliquious/reticulum/volume"
+)
 
 // NewDropoutLayer creates a new dropout layer.
 func NewDropoutLayer(sx, sy, depth int) Layer {
 	n := sx * sy * depth
-	return &dropoutLayer{sx, sy, depth, 0.5, make([]float64, n, n), nil, nil}
+	return &DropoutLayer{sx, sy, depth, 0.5, make([]bool, n, n), nil, nil}
 }
 
 // NewDropoutLayer creates a new dropout layer.
 func NewDropoutLayerWithProb(sx, sy, depth int, prob float64) Layer {
 	n := sx * sy * depth
-	return &dropoutLayer{sx, sy, depth, prob, make([]bool, n, n), nil, nil}
+	return &DropoutLayer{sx, sy, depth, prob, make([]bool, n, n), nil, nil}
 }
 
 type DropoutLayer struct {
@@ -31,7 +35,7 @@ func (l *DropoutLayer) Type() LayerType {
 }
 
 func (l *DropoutLayer) Forward(vol *volume.Volume, training bool) *volume.Volume {
-	l.in_act = vol
+	l.inVol = vol
 	vol2 := vol.Clone()
 	n := vol.Size()
 
@@ -61,7 +65,7 @@ func (l *DropoutLayer) Backward() {
 	// Need to set the gradients to zero
 	l.inVol.ZeroGrad()
 	chainGrad := l.outVol
-	n := vol.Size()
+	n := l.inVol.Size()
 
 	// Apply dropouts to input volume
 	for i := 0; i < n; i++ {
