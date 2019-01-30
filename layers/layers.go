@@ -22,6 +22,20 @@ const (
 	SVM               LayerType = "svm"
 )
 
+// LayerDef outlines the layer type, size and config.
+type LayerDef struct {
+	Type LayerType
+
+	// Input dimensions
+	Input volume.Dimensions
+
+	// Output dim
+	Output volume.Dimensions
+
+	// LayerConfig contains layer specific requirements
+	LayerConfig interface{}
+}
+
 // Layer represents a layer in the neural network.
 type Layer interface {
 	Forward(vol *volume.Volume, training bool) *volume.Volume
@@ -32,7 +46,7 @@ type Layer interface {
 // LossLayer extends the Layer interface with the Loss function
 type LossLayer interface {
 	Layer
-	Loss(index int)
+	Loss(index int) float64
 }
 
 // LayerResponse represents the layer parameters (weights) and gradients.
