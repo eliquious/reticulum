@@ -3,6 +3,11 @@ package reticulum
 import "github.com/eliquious/reticulum/volume"
 import "github.com/eliquious/reticulum/layers"
 
+const (
+	// DefaultDropout is the default dropout rate of 0.5 or 50%. Everything less than the dropout rate will be dropped.
+	DefaultDropout float64 = 0.5
+)
+
 // Network is the neural network interface.
 type Network interface {
 	Forward(vol volume.Volume, training bool)
