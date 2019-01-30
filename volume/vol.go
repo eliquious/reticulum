@@ -5,6 +5,21 @@ import (
 	"math/rand"
 )
 
+// Dimentions represents the volumetric size of the data.
+type Dimensions struct {
+	X, Y, Z int
+}
+
+// Size returns the number of elements.
+func (d *Dimensions) Size() int {
+	return d.X * d.Y * d.Z
+}
+
+// Clone returns a new Dimentsions struct with the same dimensions.
+func (d *Dimensions) Clone() Dimensions {
+	return Dimensions{d.X, d.Y, d.Z}
+}
+
 // VolumeOptions stores volume options
 type VolumeOptions struct {
 	Zero            bool
@@ -40,8 +55,8 @@ func WithWeights(w []float64) VolumeOptionFunc {
 }
 
 // NewVolume creates a new Volume of the given size and options.
-func NewVolume(sx, sy, depth int, optFuncs ...VolumeOptionFunc) *Volume {
-	n := sx * sy * depth
+func NewVolume(dim Dimensions, optFuncs ...VolumeOptionFunc) *Volume {
+	n := dim.Size()
 	w := make([]float64, n, n)
 	dw := make([]float64, n, n)
 
@@ -61,12 +76,12 @@ func NewVolume(sx, sy, depth int, optFuncs ...VolumeOptionFunc) *Volume {
 			// Arrays already contain zeros.
 		}
 	} else if opts.Weights != nil {
-		if len(opts.Weights) != depth {
+		if len(opts.Weights) != dim.Z {
 			panic("Invalid input weights: depth inconsistencies")
-		} else if sx != 1 {
-			panic("Invalid volume dimensions: sx must equal 1 when weights are given")
-		} else if sy != 1 {
-			panic("Invalid volume dimensions: sy must equal 1 when weights are given")
+		} else if dim.X != 1 {
+			panic("Invalid volume dimensions: X must equal 1 when weights are given")
+		} else if dim.Y != 1 {
+			panic("Invalid volume dimensions: Y must equal 1 when weights are given")
 		}
 		// Copy weights
 		copy(w, opts.Weights)
@@ -84,7 +99,7 @@ func NewVolume(sx, sy, depth int, optFuncs ...VolumeOptionFunc) *Volume {
 	}
 
 	return &Volume{
-		sx, sy, depth, n, w, dw,
+		dim, w, dw,
 	}
 }
 
@@ -93,21 +108,24 @@ func NewVolume(sx, sy, depth int, optFuncs ...VolumeOptionFunc) *Volume {
 // and a depth (depth). It is used to hold data for all the filters, volumes,
 // weights and gradients w.r.t. the data.
 type Volume struct {
-	sx    int
-	sy    int
-	depth int
-	n     int
-	w     []float64
-	dw    []float64
+	dim Dimensions
+	w   []float64
+	dw  []float64
 }
 
+// Dimensions returns the Dimensions of the Volume.
+func (v *Volume) Dimensions() Dimensions {
+	return v.dim
+}
+
+// Size returns the number of elements.
 func (v *Volume) Size() int {
-	return v.n
+	return v.dim.Size()
 }
 
 // getIndex returns the array index for the given position.
 func (v *Volume) getIndex(x, y, d int) int {
-	return ((v.sx*y)+x)*v.depth + d
+	return ((v.dim.X*y)+x)*v.dim.Z + d
 }
 
 // Get returns a weight for the given position in the Volume.
@@ -172,40 +190,40 @@ func (v *Volume) AddGrad(x, y, d int, val float64) {
 
 // Clone creates a new Volume with cloned weights and zeroed gradients.
 func (v *Volume) Clone() *Volume {
-	vol := NewVolume(v.sx, v.sy, v.depth, WithZeros())
+	vol := NewVolume(v.dim, WithZeros())
 	copy(vol.w, v.w)
 	return vol
 }
 
 // CloneAndZero creates a Volume of the same size but with zero weights and gradients.
 func (v *Volume) CloneAndZero() *Volume {
-	return NewVolume(v.sx, v.sy, v.depth, WithZeros())
+	return NewVolume(v.dim, WithZeros())
 }
 
 // AddFrom adds the weights from another Volume.
 func (v *Volume) AddFrom(vol *Volume) {
-	for i := 0; i < v.n; i++ {
+	for i := 0; i < v.Size(); i++ {
 		v.w[i] += vol.w[i]
 	}
 }
 
 // AddFromScaled adds the weights from another Volume and scaled with the given value.
 func (v *Volume) AddFromScaled(vol *Volume, scale float64) {
-	for i := 0; i < v.n; i++ {
+	for i := 0; i < v.Size(); i++ {
 		v.w[i] += vol.w[i] * scale
 	}
 }
 
 // ZeroGrad sets the gradients to 0.
 func (v *Volume) ZeroGrad() {
-	for i := 0; i < v.n; i++ {
+	for i := 0; i < v.Size(); i++ {
 		v.dw[i] = 0.0
 	}
 }
 
 // SetConst sets the weights to the given value.
 func (v *Volume) SetConst(val float64) {
-	for i := 0; i < v.n; i++ {
+	for i := 0; i < v.Size(); i++ {
 		v.w[i] = val
 	}
 }

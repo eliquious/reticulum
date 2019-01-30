@@ -60,7 +60,7 @@ func TestWithWeights_InvalidDepth(t *testing.T) {
 	}()
 
 	// This function should cause a panic
-	NewVolume(1, 1, 10, WithWeights(randArray(5)))
+	NewVolume(Dimensions{1, 1, 10}, WithWeights(randArray(5)))
 }
 
 func TestWithWeights_InvalidSy(t *testing.T) {
@@ -71,7 +71,7 @@ func TestWithWeights_InvalidSy(t *testing.T) {
 	}()
 
 	// This function should cause a panic
-	NewVolume(1, 2, 5, WithWeights(randArray(5)))
+	NewVolume(Dimensions{1, 2, 5}, WithWeights(randArray(5)))
 }
 
 func TestWithWeights_InvalidSx(t *testing.T) {
@@ -82,12 +82,12 @@ func TestWithWeights_InvalidSx(t *testing.T) {
 	}()
 
 	// This function should cause a panic
-	NewVolume(2, 1, 5, WithWeights(randArray(5)))
+	NewVolume(Dimensions{2, 1, 5}, WithWeights(randArray(5)))
 }
 
 func TestWithWeights(t *testing.T) {
 	wgts := randArray(5)
-	vol := NewVolume(1, 1, 5, WithWeights(wgts))
+	vol := NewVolume(Dimensions{1, 1, 5}, WithWeights(wgts))
 	if !reflect.DeepEqual(vol.w, wgts) {
 		t.Errorf("WithWeights() = %v, want %v", vol.w, wgts)
 	}
@@ -122,9 +122,7 @@ func TestWithZeros(t *testing.T) {
 
 func TestNewVolume(t *testing.T) {
 	type args struct {
-		sx       int
-		sy       int
-		depth    int
+		dim      Dimensions
 		optFuncs []VolumeOptionFunc
 	}
 	tests := []struct {
@@ -132,23 +130,24 @@ func TestNewVolume(t *testing.T) {
 		args args
 		want *Volume
 	}{
-		{"NewVolumeWithZeros", args{1, 1, 25, []VolumeOptionFunc{WithZeros()}}, NewVolume(1, 1, 25, WithZeros())},
-		{"NewVolumeWithInitialValue", args{1, 1, 25, []VolumeOptionFunc{WithInitialValue(0.5)}}, NewVolume(1, 1, 25, WithInitialValue(0.5))},
+		{"NewVolumeWithZeros", args{Dimensions{1, 1, 25}, []VolumeOptionFunc{WithZeros()}}, NewVolume(Dimensions{1, 1, 25}, WithZeros())},
+		{"NewVolumeWithInitialValue", args{Dimensions{1, 1, 25}, []VolumeOptionFunc{WithInitialValue(0.5)}}, NewVolume(Dimensions{1, 1, 25}, WithInitialValue(0.5))},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewVolume(tt.args.sx, tt.args.sy, tt.args.depth, tt.args.optFuncs...); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewVolume() = %v, want %v", got, tt.want)
+			if got := NewVolume(tt.args.dim, tt.args.optFuncs...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewVolume(Dimensions{) = %v, want} %v", got, tt.want)
 			}
 		})
 	}
 }
 
 func TestVolume_Get(t *testing.T) {
-	vol := NewVolume(1, 2, 6)
-	for x := 0; x < vol.sx; x++ {
-		for y := 0; y < vol.sy; y++ {
-			for d := 0; d < vol.depth; d++ {
+	dim := Dimensions{1, 2, 6}
+	vol := NewVolume(dim)
+	for x := 0; x < dim.X; x++ {
+		for y := 0; y < dim.Y; y++ {
+			for d := 0; d < dim.Z; d++ {
 				want := vol.w[vol.getIndex(x, y, d)]
 				if got := vol.Get(x, y, d); got != want {
 					t.Errorf("Volume.Get() = %v, want %v", got, want)
@@ -159,10 +158,11 @@ func TestVolume_Get(t *testing.T) {
 }
 
 func TestVolume_Set(t *testing.T) {
-	vol := NewVolume(1, 2, 6, WithZeros())
-	for x := 0; x < vol.sx; x++ {
-		for y := 0; y < vol.sy; y++ {
-			for d := 0; d < vol.depth; d++ {
+	dim := Dimensions{1, 2, 6}
+	vol := NewVolume(dim, WithZeros())
+	for x := 0; x < dim.X; x++ {
+		for y := 0; y < dim.Y; y++ {
+			for d := 0; d < dim.Z; d++ {
 				value := rand.Float64()
 				vol.Set(x, y, d, value)
 				want := vol.w[vol.getIndex(x, y, d)]
@@ -177,12 +177,9 @@ func TestVolume_Set(t *testing.T) {
 
 func TestVolume_Add(t *testing.T) {
 	type fields struct {
-		sx    int
-		sy    int
-		depth int
-		n     int
-		w     []float64
-		dw    []float64
+		dim Dimensions
+		w   []float64
+		dw  []float64
 	}
 	type args struct {
 		x   int
@@ -195,18 +192,15 @@ func TestVolume_Add(t *testing.T) {
 		fields fields
 		args   args
 	}{
-		{"Zeros", fields{1, 2, 6, 12, make([]float64, 12), make([]float64, 12)}, args{1, 0, 5, 0.5}},
-		{"Random", fields{1, 2, 6, 12, randArray(12), randArray(12)}, args{1, 0, 5, 0.1}},
+		{"Zeros", fields{Dimensions{1, 2, 6}, make([]float64, 12), make([]float64, 12)}, args{1, 0, 5, 0.5}},
+		{"Random", fields{Dimensions{1, 2, 6}, randArray(12), randArray(12)}, args{1, 0, 5, 0.1}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			v := &Volume{
-				sx:    tt.fields.sx,
-				sy:    tt.fields.sy,
-				depth: tt.fields.depth,
-				n:     tt.fields.n,
-				w:     tt.fields.w,
-				dw:    tt.fields.dw,
+				dim: tt.fields.dim,
+				w:   tt.fields.w,
+				dw:  tt.fields.dw,
 			}
 			before := v.Get(tt.args.x, tt.args.y, tt.args.d)
 			v.Add(tt.args.x, tt.args.y, tt.args.d, tt.args.val)
@@ -232,10 +226,10 @@ func TestVolume_getIndex(t *testing.T) {
 		vol  *Volume
 		want int
 	}{
-		{"Zero XY", args{0, 0, 5}, NewVolume(1, 1, 20, WithZeros()), 5},
-		{"Zero Y", args{1, 0, 5}, NewVolume(1, 1, 20, WithZeros()), 25},
-		{"Zero X", args{0, 1, 5}, NewVolume(1, 1, 20, WithZeros()), 25},
-		{"Zero D", args{1, 1, 0}, NewVolume(1, 20, 5, WithZeros()), 10},
+		{"Zero XY", args{0, 0, 5}, NewVolume(Dimensions{1, 1, 20}, WithZeros()), 5},
+		{"Zero Y", args{1, 0, 5}, NewVolume(Dimensions{1, 1, 20}, WithZeros()), 25},
+		{"Zero X", args{0, 1, 5}, NewVolume(Dimensions{1, 1, 20}, WithZeros()), 25},
+		{"Zero D", args{1, 1, 0}, NewVolume(Dimensions{1, 20, 5}, WithZeros()), 10},
 	}
 
 	for _, tt := range tests {
@@ -250,33 +244,28 @@ func TestVolume_getIndex(t *testing.T) {
 
 func TestVolume_GetGrad(t *testing.T) {
 	type fields struct {
-		sx    int
-		sy    int
-		depth int
-		n     int
-		w     []float64
-		dw    []float64
+		dim Dimensions
+		w   []float64
+		dw  []float64
 	}
 	tests := []struct {
 		name   string
 		fields fields
 	}{
 		// TODO: Add test cases.
-		{"GetGrad_Random", fields{1, 2, 20, 40, randArray(40), randArray(40)}},
+		{"GetGrad_Random", fields{Dimensions{1, 2, 20}, randArray(40), randArray(40)}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			vol := &Volume{
-				sx:    tt.fields.sx,
-				sy:    tt.fields.sy,
-				depth: tt.fields.depth,
-				n:     tt.fields.n,
-				w:     tt.fields.w,
-				dw:    tt.fields.dw,
+				dim: tt.fields.dim,
+				w:   tt.fields.w,
+				dw:  tt.fields.dw,
 			}
-			for x := 0; x < vol.sx; x++ {
-				for y := 0; y < vol.sy; y++ {
-					for d := 0; d < vol.depth; d++ {
+			dim := tt.fields.dim
+			for x := 0; x < dim.X; x++ {
+				for y := 0; y < dim.Y; y++ {
+					for d := 0; d < dim.Z; d++ {
 						want := vol.dw[vol.getIndex(x, y, d)]
 						if got := vol.GetGrad(x, y, d); got != want {
 							t.Errorf("Volume.GetGrad() = %v, want %v", got, want)
@@ -290,12 +279,9 @@ func TestVolume_GetGrad(t *testing.T) {
 
 func TestVolume_SetGrad(t *testing.T) {
 	type fields struct {
-		sx    int
-		sy    int
-		depth int
-		n     int
-		w     []float64
-		dw    []float64
+		dim Dimensions
+		w   []float64
+		dw  []float64
 	}
 	tests := []struct {
 		name   string
@@ -303,23 +289,20 @@ func TestVolume_SetGrad(t *testing.T) {
 		want   float64
 	}{
 		// TODO: Add test cases.
-		{"SetGrad_Random", fields{1, 2, 20, 40, randArray(40), randArray(40)}, 0.5},
+		{"SetGrad_Random", fields{Dimensions{1, 2, 20}, randArray(40), randArray(40)}, 0.5},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			vol := &Volume{
-				sx:    tt.fields.sx,
-				sy:    tt.fields.sy,
-				depth: tt.fields.depth,
-				n:     tt.fields.n,
-				w:     tt.fields.w,
-				dw:    tt.fields.dw,
+				dim: tt.fields.dim,
+				w:   tt.fields.w,
+				dw:  tt.fields.dw,
 			}
 
-			for x := 0; x < vol.sx; x++ {
-				for y := 0; y < vol.sy; y++ {
-					for d := 0; d < vol.depth; d++ {
-						// want := vol.dw[vol.getIndex(x, y, d)]
+			dim := tt.fields.dim
+			for x := 0; x < dim.X; x++ {
+				for y := 0; y < dim.Y; y++ {
+					for d := 0; d < dim.Z; d++ {
 						vol.SetGrad(x, y, d, tt.want)
 						if got := vol.GetGrad(x, y, d); got != tt.want {
 							t.Errorf("Volume.SetGrad() = %v, want %v", got, tt.want)
@@ -333,12 +316,9 @@ func TestVolume_SetGrad(t *testing.T) {
 
 func TestVolume_AddGrad(t *testing.T) {
 	type fields struct {
-		sx    int
-		sy    int
-		depth int
-		n     int
-		w     []float64
-		dw    []float64
+		dim Dimensions
+		w   []float64
+		dw  []float64
 	}
 	tests := []struct {
 		name   string
@@ -346,22 +326,21 @@ func TestVolume_AddGrad(t *testing.T) {
 		arg    float64
 	}{
 		// TODO: Add test cases.
-		{"AddGrad_Random", fields{1, 2, 20, 40, randArray(40), randArray(40)}, 0.5},
+		{"AddGrad_Random", fields{Dimensions{1, 2, 20}, randArray(40), randArray(40)}, 0.5},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			vol := &Volume{
-				sx:    tt.fields.sx,
-				sy:    tt.fields.sy,
-				depth: tt.fields.depth,
-				n:     tt.fields.n,
-				w:     tt.fields.w,
-				dw:    tt.fields.dw,
+				dim: tt.fields.dim,
+				w:   tt.fields.w,
+				dw:  tt.fields.dw,
 			}
-			for x := 0; x < vol.sx; x++ {
-				for y := 0; y < vol.sy; y++ {
-					for d := 0; d < vol.depth; d++ {
+
+			dim := tt.fields.dim
+			for x := 0; x < dim.X; x++ {
+				for y := 0; y < dim.Y; y++ {
+					for d := 0; d < dim.Z; d++ {
 						want := vol.dw[vol.getIndex(x, y, d)] + tt.arg
 						vol.AddGrad(x, y, d, tt.arg)
 						if got := vol.GetGrad(x, y, d); got != want {
@@ -376,25 +355,26 @@ func TestVolume_AddGrad(t *testing.T) {
 }
 
 func TestVolume_Clone(t *testing.T) {
-	v := NewVolume(1, 2, 6)
+	v := NewVolume(Dimensions{1, 2, 6})
 	if got := v.Clone(); !reflect.DeepEqual(got, v) {
 		t.Errorf("Volume.Clone() = %v, want %v", got, v)
 	}
 }
 
 func TestVolume_CloneAndZero(t *testing.T) {
-	v := NewVolume(1, 2, 6, WithZeros())
+	v := NewVolume(Dimensions{1, 2, 6}, WithZeros())
 	if got := v.CloneAndZero(); !reflect.DeepEqual(got, v) {
 		t.Errorf("Volume.CloneAndZero() = %v, want %v", got, v)
 	}
 }
 
 func TestVolume_AddFrom(t *testing.T) {
-	vol := NewVolume(1, 2, 20)
-	vol2 := NewVolume(1, 2, 20)
-	for x := 0; x < vol.sx; x++ {
-		for y := 0; y < vol.sy; y++ {
-			for d := 0; d < vol.depth; d++ {
+	dim := Dimensions{1, 2, 20}
+	vol := NewVolume(dim)
+	vol2 := NewVolume(dim)
+	for x := 0; x < dim.X; x++ {
+		for y := 0; y < dim.Y; y++ {
+			for d := 0; d < dim.Z; d++ {
 				ix := vol.getIndex(x, y, d)
 				want := vol.w[ix] + vol2.w[ix]
 				vol.AddFrom(vol2)
@@ -409,11 +389,12 @@ func TestVolume_AddFrom(t *testing.T) {
 func TestVolume_AddFromScaled(t *testing.T) {
 
 	scale := 0.5
-	vol := NewVolume(1, 2, 20)
-	vol2 := NewVolume(1, 2, 20)
-	for x := 0; x < vol.sx; x++ {
-		for y := 0; y < vol.sy; y++ {
-			for d := 0; d < vol.depth; d++ {
+	dim := Dimensions{1, 2, 20}
+	vol := NewVolume(dim)
+	vol2 := NewVolume(dim)
+	for x := 0; x < dim.X; x++ {
+		for y := 0; y < dim.Y; y++ {
+			for d := 0; d < dim.Z; d++ {
 				ix := vol.getIndex(x, y, d)
 				want := vol.w[ix] + vol2.w[ix]*scale
 				vol.AddFromScaled(vol2, scale)
@@ -427,10 +408,12 @@ func TestVolume_AddFromScaled(t *testing.T) {
 
 func TestVolume_SetConst(t *testing.T) {
 	want := -1.0
-	vol := NewVolume(1, 2, 6, WithInitialValue(-1.0))
-	for x := 0; x < vol.sx; x++ {
-		for y := 0; y < vol.sy; y++ {
-			for d := 0; d < vol.depth; d++ {
+	dim := Dimensions{1, 2, 6}
+	vol := NewVolume(dim, WithInitialValue(-1.0))
+
+	for x := 0; x < dim.X; x++ {
+		for y := 0; y < dim.Y; y++ {
+			for d := 0; d < dim.Z; d++ {
 				if got := vol.Get(x, y, d); got != want {
 					t.Errorf("Volume.Get() = %v, want %v", got, want)
 				}
@@ -440,9 +423,10 @@ func TestVolume_SetConst(t *testing.T) {
 
 	want = 5.0
 	vol.SetConst(want)
-	for x := 0; x < vol.sx; x++ {
-		for y := 0; y < vol.sy; y++ {
-			for d := 0; d < vol.depth; d++ {
+
+	for x := 0; x < dim.X; x++ {
+		for y := 0; y < dim.Y; y++ {
+			for d := 0; d < dim.Z; d++ {
 				if got := vol.Get(x, y, d); got != want {
 					t.Errorf("Volume.Get() = %v, want %v", got, want)
 				}
