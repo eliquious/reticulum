@@ -188,6 +188,11 @@ func (v *Volume) AddGrad(x, y, d int, val float64) {
 	v.dw[v.getIndex(x, y, d)] += val
 }
 
+// AddGradByIndex adds the given value to the gradient for the given index.
+func (v *Volume) AddGradByIndex(index int, val float64) {
+	v.dw[index] += val
+}
+
 // Clone creates a new Volume with cloned weights and zeroed gradients.
 func (v *Volume) Clone() *Volume {
 	vol := NewVolume(v.dim, WithZeros())
