@@ -71,6 +71,9 @@ func (l *softmaxLayer) Forward(vol *volume.Volume, training bool) *volume.Volume
 }
 
 func (l *softmaxLayer) Loss(index int) float64 {
+	if index < 0 || index >= l.outDim.Size() {
+		panic(fmt.Errorf("Invalid dimension index: %d", index))
+	}
 
 	// compute and accumulate gradient wrt weights and bias of this layer
 	// zero out the gradient of input Vol
@@ -91,6 +94,7 @@ func (l *softmaxLayer) Loss(index int) float64 {
 }
 
 func (l *softmaxLayer) Backward() {
+	panic(fmt.Errorf("Unsupported operation"))
 }
 
 func (l *softmaxLayer) GetResponse() []LayerResponse {

@@ -30,7 +30,9 @@ func (il *inputLayer) Forward(vol *volume.Volume, training bool) *volume.Volume 
 	return il.outVol
 }
 
-func (il *inputLayer) Backward() {}
+func (il *inputLayer) Backward() {
+	panic(fmt.Errorf("Unsupported operation"))
+}
 
 func (il *inputLayer) GetResponse() []LayerResponse {
 	return []LayerResponse{}
