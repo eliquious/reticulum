@@ -49,6 +49,13 @@ type LossLayer interface {
 	Loss(index int) float64
 }
 
+// RegressionLossLayer extends the Layer interface with the Loss function
+type RegressionLossLayer interface {
+	Layer
+	MultiDimensionalLoss(losses []float64) float64
+	DimensionalLoss(index int, value float64) float64
+}
+
 // LayerResponse represents the layer parameters (weights) and gradients.
 type LayerResponse struct {
 	Weights    []float64
