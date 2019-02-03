@@ -24,12 +24,12 @@ type sigmoidLayer struct {
 	outVol *volume.Volume
 }
 
-func (il *sigmoidLayer) Type() LayerType {
+func (*sigmoidLayer) Type() LayerType {
 	return Sigmoid
 }
 
-func (il *sigmoidLayer) Forward(vol *volume.Volume, training bool) *volume.Volume {
-	il.inVol = vol
+func (l *sigmoidLayer) Forward(vol *volume.Volume, training bool) *volume.Volume {
+	l.inVol = vol
 	v2 := vol.CloneAndZero()
 
 	// Rectify to zero
@@ -38,11 +38,11 @@ func (il *sigmoidLayer) Forward(vol *volume.Volume, training bool) *volume.Volum
 		v2.SetByIndex(i, 1.0/(1.0+math.Exp(-vol.GetByIndex(i))))
 	}
 
-	il.outVol = v2
-	return il.outVol
+	l.outVol = v2
+	return l.outVol
 }
 
-func (il *sigmoidLayer) Backward() {
+func (l *sigmoidLayer) Backward() {
 	n := l.inVol.Size()
 	l.inVol.ZeroGrad()
 
@@ -52,6 +52,6 @@ func (il *sigmoidLayer) Backward() {
 	}
 }
 
-func (il *sigmoidLayer) GetResponse() []LayerResponse {
+func (*sigmoidLayer) GetResponse() []LayerResponse {
 	return []LayerResponse{}
 }

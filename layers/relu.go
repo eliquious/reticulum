@@ -20,12 +20,12 @@ type reluLayer struct {
 	outVol *volume.Volume
 }
 
-func (il *reluLayer) Type() LayerType {
+func (*reluLayer) Type() LayerType {
 	return ReLU
 }
 
-func (il *reluLayer) Forward(vol *volume.Volume, training bool) *volume.Volume {
-	il.inVol = vol
+func (l *reluLayer) Forward(vol *volume.Volume, training bool) *volume.Volume {
+	l.inVol = vol
 	v2 := vol.Clone()
 
 	// Rectify to zero
@@ -36,11 +36,11 @@ func (il *reluLayer) Forward(vol *volume.Volume, training bool) *volume.Volume {
 		}
 	}
 
-	il.outVol = v2
-	return il.outVol
+	l.outVol = v2
+	return l.outVol
 }
 
-func (il *reluLayer) Backward() {
+func (l *reluLayer) Backward() {
 	n := l.inVol.Size()
 	l.inVol.ZeroGrad()
 
@@ -48,13 +48,13 @@ func (il *reluLayer) Backward() {
 	for i := 0; i < n; i++ {
 		// Threshold
 		if l.outVol.GetByIndex(i) <= 0 {
-			l.inVol.SerGradByIndex(i, 0)
+			l.inVol.SetGradByIndex(i, 0)
 		} else {
 			l.inVol.SetGradByIndex(i, l.outVol.GetGradByIndex(i))
 		}
 	}
 }
 
-func (il *reluLayer) GetResponse() []LayerResponse {
+func (*reluLayer) GetResponse() []LayerResponse {
 	return []LayerResponse{}
 }

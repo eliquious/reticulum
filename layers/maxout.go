@@ -2,7 +2,6 @@ package layers
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/eliquious/reticulum/volume"
 )
