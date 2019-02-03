@@ -15,7 +15,7 @@ const (
 	Regression        LayerType = "regression"
 	Conv              LayerType = "conv"
 	Pool              LayerType = "pool"
-	Relu              LayerType = "relu"
+	ReLU              LayerType = "relu"
 	Sigmoid           LayerType = "sigmoid"
 	Tanh              LayerType = "tanh"
 	Maxout            LayerType = "maxout"

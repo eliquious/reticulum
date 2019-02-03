@@ -15,6 +15,9 @@ type Network interface {
 	GetCostLoss(vol volume.Volume, index int)
 	GetPrediction() int
 	GetResponse() []layers.LayerResponse
+
+	MultiDimensionalLoss(losses []float64) float64
+	DimensionalLoss(index int, value float64) float64
 }
 
 type network struct {
