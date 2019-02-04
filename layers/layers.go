@@ -22,6 +22,12 @@ const (
 	SVM               LayerType = "svm"
 )
 
+// LayerConfig stores layer specific config
+type LayerConfig interface{}
+
+// LayerOptionFunc provides for options in LayerConfig
+type LayerOptionFunc func(LayerConfig) error
+
 // LayerDef outlines the layer type, size and config.
 type LayerDef struct {
 	Type LayerType
@@ -33,7 +39,7 @@ type LayerDef struct {
 	Output volume.Dimensions
 
 	// LayerConfig contains layer specific requirements
-	LayerConfig interface{}
+	LayerConfig LayerConfig
 }
 
 // Layer represents a layer in the neural network.
