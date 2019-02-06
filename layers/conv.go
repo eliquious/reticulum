@@ -7,73 +7,48 @@ import (
 	"github.com/eliquious/reticulum/volume"
 )
 
-// WithConvStride sets the stride for the conv layer
-func WithConvStride(stride int) LayerOptionFunc {
+// WithStride sets the stride for the conv layer
+func WithStride(stride int) LayerOptionFunc {
 	return func(lc LayerConfig) error {
 		conf, ok := lc.(*convLayerConfig)
 		if !ok {
-			return fmt.Errorf("Invalid LayerConfig for ConfLayer")
+			return fmt.Errorf("Invalid LayerConfig for ConvLayer")
 		}
 		conf.Stride = stride
 		return nil
 	}
 }
 
-// WithConvPadding sets the padding for the conv layer
-func WithConvPadding(pad int) LayerOptionFunc {
+// WithPadding sets the padding for the conv layer
+func WithPadding(pad int) LayerOptionFunc {
 	return func(lc LayerConfig) error {
 		conf, ok := lc.(*convLayerConfig)
 		if !ok {
-			return fmt.Errorf("Invalid LayerConfig for ConfLayer")
+			return fmt.Errorf("Invalid LayerConfig for ConvLayer")
 		}
 		conf.Padding = pad
 		return nil
 	}
 }
 
-// WithConvDecay sets the L1 & L2 decay for the conv layer
-func WithConvDecay(l1 float64, l2 float64) LayerOptionFunc {
+// WithSx sets the sx for the conv layer
+func WithSx(sx int) LayerOptionFunc {
 	return func(lc LayerConfig) error {
 		conf, ok := lc.(*convLayerConfig)
 		if !ok {
-			return fmt.Errorf("Invalid LayerConfig for ConfLayer")
-		}
-		conf.L1DecayMult = l1
-		conf.L2DecayMult = l2
-		return nil
-	}
-}
-
-// WithConvBias sets the preferred bias for the conv layer
-func WithConvBias(bias float64) LayerOptionFunc {
-	return func(lc LayerConfig) error {
-		conf, ok := lc.(*convLayerConfig)
-		if !ok {
-			return fmt.Errorf("Invalid LayerConfig for ConfLayer")
-		}
-		conf.PreferredBias = bias
-		return nil
-	}
-}
-
-// WithConvSx sets the sx for the conv layer
-func WithConvSx(sx int) LayerOptionFunc {
-	return func(lc LayerConfig) error {
-		conf, ok := lc.(*convLayerConfig)
-		if !ok {
-			return fmt.Errorf("Invalid LayerConfig for ConfLayer")
+			return fmt.Errorf("Invalid LayerConfig for ConvLayer")
 		}
 		conf.Sx = sx
 		return nil
 	}
 }
 
-// WithConvSy sets the sy for the conv layer
-func WithConvSy(sy int) LayerOptionFunc {
+// WithSy sets the sy for the conv layer
+func WithSy(sy int) LayerOptionFunc {
 	return func(lc LayerConfig) error {
 		conf, ok := lc.(*convLayerConfig)
 		if !ok {
-			return fmt.Errorf("Invalid LayerConfig for ConfLayer")
+			return fmt.Errorf("Invalid LayerConfig for ConvLayer")
 		}
 		conf.Sy = sy
 		return nil
@@ -234,8 +209,8 @@ func (l *convLayer) Backward() {
 							for fz := 0; fz < fDim.Z; fz++ {
 								ix1 := ((vsy*oy)+ox)*vDim.Z + fz
 								ix2 := ((fDim.X*fy)+fx)*fDim.Z + fz
-								f.SetGradByIndex(ix2, l.inVol.GetByIndex(ix1)*chainGrad)
-								l.inVol.SetGradByIndex(ix1, f.GetByIndex(ix2)*chainGrad)
+								f.AddGradByIndex(ix2, l.inVol.GetByIndex(ix1)*chainGrad)
+								l.inVol.AddGradByIndex(ix1, f.GetByIndex(ix2)*chainGrad)
 							}
 						}
 					}
