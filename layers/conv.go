@@ -7,50 +7,62 @@ import (
 	"github.com/eliquious/reticulum/volume"
 )
 
-// WithStride sets the stride for the conv layer
+// WithStride sets the stride for the conv or pool layer
 func WithStride(stride int) LayerOptionFunc {
 	return func(lc LayerConfig) error {
-		conf, ok := lc.(*convLayerConfig)
-		if !ok {
-			return fmt.Errorf("Invalid LayerConfig for ConvLayer")
+		switch conf := lc.(type) {
+		case *poolLayerConfig:
+			conf.Stride = stride
+		case *convLayerConfig:
+			conf.Stride = stride
+		default:
+			return fmt.Errorf("Invalid LayerConfig for ConvLayer Stride")
 		}
-		conf.Stride = stride
 		return nil
 	}
 }
 
-// WithPadding sets the padding for the conv layer
+// WithPadding sets the padding for the conv or pool layer
 func WithPadding(pad int) LayerOptionFunc {
 	return func(lc LayerConfig) error {
-		conf, ok := lc.(*convLayerConfig)
-		if !ok {
-			return fmt.Errorf("Invalid LayerConfig for ConvLayer")
+		switch conf := lc.(type) {
+		case *poolLayerConfig:
+			conf.Padding = pad
+		case *convLayerConfig:
+			conf.Padding = pad
+		default:
+			return fmt.Errorf("Invalid LayerConfig for ConvLayer Padding")
 		}
-		conf.Padding = pad
 		return nil
 	}
 }
 
-// WithSx sets the sx for the conv layer
+// WithSx sets the sx for the conv or pool layer
 func WithSx(sx int) LayerOptionFunc {
 	return func(lc LayerConfig) error {
-		conf, ok := lc.(*convLayerConfig)
-		if !ok {
-			return fmt.Errorf("Invalid LayerConfig for ConvLayer")
+		switch conf := lc.(type) {
+		case *poolLayerConfig:
+			conf.Sx = sx
+		case *convLayerConfig:
+			conf.Sx = sx
+		default:
+			return fmt.Errorf("Invalid LayerConfig for ConvLayer Sx")
 		}
-		conf.Sx = sx
 		return nil
 	}
 }
 
-// WithSy sets the sy for the conv layer
+// WithSy sets the sy for the conv or pool layer
 func WithSy(sy int) LayerOptionFunc {
 	return func(lc LayerConfig) error {
-		conf, ok := lc.(*convLayerConfig)
-		if !ok {
-			return fmt.Errorf("Invalid LayerConfig for ConvLayer")
+		switch conf := lc.(type) {
+		case *poolLayerConfig:
+			conf.Sy = sy
+		case *convLayerConfig:
+			conf.Sy = sy
+		default:
+			return fmt.Errorf("Invalid LayerConfig for ConvLayer Sx")
 		}
-		conf.Sy = sy
 		return nil
 	}
 }
@@ -63,6 +75,7 @@ func NewConvLayerConfig(filters int, opts ...LayerOptionFunc) LayerConfig {
 
 	conf := &convLayerConfig{
 		FilterCount:   filters,
+		Sx:            filters,
 		Stride:        1,
 		Padding:       0,
 		L1DecayMult:   0.0,
