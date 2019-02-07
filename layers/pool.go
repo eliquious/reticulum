@@ -62,7 +62,7 @@ func NewPoolLayer(def LayerDef) Layer {
 	outDepth := def.Input.Z
 	outSx := math.Floor((float64(def.Input.X)+float64(conf.Padding)*2.0-float64(conf.Sx))/float64(conf.Stride) + 1)
 	outSy := math.Floor((float64(def.Input.Y)+float64(conf.Padding)*2.0-float64(conf.Sy))/float64(conf.Stride) + 1)
-	outDim := volume.Dimensions{int(outSx), int(outSy), outDepth}
+	outDim := volume.NewDimensions(int(outSx), int(outSy), outDepth)
 
 	return &poolLayer{conf, def.Input, outDim, nil, nil, make([]int, outDim.Size()), make([]int, outDim.Size())}
 }

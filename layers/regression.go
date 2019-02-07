@@ -12,11 +12,41 @@ func NewRegressionLayer(def LayerDef) Layer {
 		panic(fmt.Errorf("Invalid layer type: %s != regression", def.Type))
 	}
 
+	// Get config
+	conf, ok := def.LayerConfig.(*regressionLayerConfig)
+	if !ok {
+		panic("invalid LayerConfig for regressionLayerConfig")
+	}
+
 	n := def.Input.Size()
-	return &regressionLayer{def.Input, volume.Dimensions{1, 1, n}, nil, nil}
+	return &regressionLayer{conf, def.Input, volume.NewDimensions(1, 1, n), nil, nil}
+}
+
+// NewRegressionLayerConfig creates a new LayerConfig config with the given options.
+func NewRegressionLayerConfig(neurons int, opts ...LayerOptionFunc) LayerConfig {
+	if neurons <= 0 {
+		panic("neuron count must be greater than 0")
+	}
+
+	conf := &regressionLayerConfig{
+		Neurons: neurons,
+	}
+	for i := 0; i < len(opts); i++ {
+		err := opts[i](conf)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return conf
+}
+
+// regressionLayerConfig stores the config info for regression layers
+type regressionLayerConfig struct {
+	Neurons int
 }
 
 type regressionLayer struct {
+	conf   *regressionLayerConfig
 	inDim  volume.Dimensions
 	outDim volume.Dimensions
 

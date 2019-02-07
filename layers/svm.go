@@ -12,11 +12,41 @@ func NewSVMLayer(def LayerDef) Layer {
 		panic(fmt.Errorf("Invalid layer type: %s != svm", def.Type))
 	}
 
+	// Get config
+	conf, ok := def.LayerConfig.(*svmLayerConfig)
+	if !ok {
+		panic("invalid LayerConfig for svmLayerConfig")
+	}
+
 	n := def.Input.Size()
-	return &svmLayer{def.Input, volume.Dimensions{1, 1, n}, nil, nil}
+	return &svmLayer{conf, def.Input, volume.Dimensions{X: 1, Y: 1, Z: n}, nil, nil}
+}
+
+// NewSVMLayerConfig creates a new LayerConfig config with the given options.
+func NewSVMLayerConfig(classes int, opts ...LayerOptionFunc) LayerConfig {
+	if classes <= 0 {
+		panic("class count must be greater than 0")
+	}
+
+	conf := &svmLayerConfig{
+		Classes: classes,
+	}
+	for i := 0; i < len(opts); i++ {
+		err := opts[i](conf)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return conf
+}
+
+// svmLayerConfig stores the config info for svm layers
+type svmLayerConfig struct {
+	Classes int
 }
 
 type svmLayer struct {
+	conf   *svmLayerConfig
 	inDim  volume.Dimensions
 	outDim volume.Dimensions
 

@@ -59,6 +59,7 @@ func NewFullyConnectedLayerConfig(neurons int, opts ...LayerOptionFunc) LayerCon
 	return conf
 }
 
+// fullyConnLayerConfig stores the config info for fully connected layers
 type fullyConnLayerConfig struct {
 	Neurons       int
 	L1DecayMult   float64
@@ -86,15 +87,15 @@ func NewFullyConnectedLayer(def LayerDef) Layer {
 
 	// Output dimensions
 	outDepth := conf.Neurons
-	outDim := volume.Dimensions{1, 1, outDepth}
+	outDim := volume.Dimensions{X: 1, Y: 1, Z: outDepth}
 
 	bias := conf.PreferredBias
 	var filters []*volume.Volume
 	for i := 0; i < outDepth; i++ {
-		filters = append(filters, volume.NewVolume(volume.Dimensions{1, 1, def.Input.Size()}))
+		filters = append(filters, volume.NewVolume(volume.Dimensions{X: 1, Y: 1, Z: def.Input.Size()}))
 	}
 
-	biases := volume.NewVolume(volume.Dimensions{1, 1, outDepth}, volume.WithInitialValue(bias))
+	biases := volume.NewVolume(volume.Dimensions{X: 1, Y: 1, Z: outDepth}, volume.WithInitialValue(bias))
 	return &fullyConnLayer{conf, def.Input, outDim, nil, nil, filters, biases}
 }
 

@@ -129,15 +129,15 @@ func NewConvLayer(def LayerDef) Layer {
 	outDepth := conf.FilterCount
 	outSx := math.Floor((float64(def.Input.X)+float64(conf.Padding)*2.0-float64(conf.Sx))/float64(conf.Stride) + 1)
 	outSy := math.Floor((float64(def.Input.Y)+float64(conf.Padding)*2.0-float64(conf.Sy))/float64(conf.Stride) + 1)
-	outDim := volume.Dimensions{int(outSx), int(outSy), outDepth}
+	outDim := volume.NewDimensions(int(outSx), int(outSy), outDepth)
 
 	bias := conf.PreferredBias
 	var filters []*volume.Volume
 	for i := 0; i < outDepth; i++ {
-		filters = append(filters, volume.NewVolume(volume.Dimensions{conf.Sx, conf.Sy, def.Input.Z}))
+		filters = append(filters, volume.NewVolume(volume.NewDimensions(conf.Sx, conf.Sy, def.Input.Z)))
 	}
 
-	biases := volume.NewVolume(volume.Dimensions{1, 1, outDepth}, volume.WithInitialValue(bias))
+	biases := volume.NewVolume(volume.NewDimensions(1, 1, outDepth), volume.WithInitialValue(bias))
 	return &convLayer{conf, def.Input, outDim, nil, nil, filters, biases}
 }
 

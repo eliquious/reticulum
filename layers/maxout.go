@@ -20,7 +20,7 @@ func NewMaxoutLayer(def LayerDef) Layer {
 	}
 
 	// Cast layer config
-	conf, ok := def.LayerConfig.(MaxoutLayerConfig)
+	conf, ok := def.LayerConfig.(*MaxoutLayerConfig)
 	if !ok {
 		panic(fmt.Errorf("Invalid layer config: expected MaxoutLayerConfig got %T", conf))
 	}
@@ -34,7 +34,7 @@ func NewMaxoutLayer(def LayerDef) Layer {
 }
 
 type maxoutLayer struct {
-	conf   MaxoutLayerConfig
+	conf   *MaxoutLayerConfig
 	output volume.Dimensions
 
 	inVol  *volume.Volume

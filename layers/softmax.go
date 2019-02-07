@@ -13,14 +13,53 @@ import (
 // normalize to sum to 1 as probabilities should)
 func NewSoftmaxLayer(def LayerDef) Layer {
 	if def.Type != SoftMax {
-		panic(fmt.Errorf("Invalid layer type: %s != softmax", def.Type))
+		panic(fmt.Errorf("invalid layer type: %s != softmax", def.Type))
+	} else if def.LayerConfig == nil {
+		panic(fmt.Errorf("invalid layer config"))
+	}
+
+	// Get config
+	conf, ok := def.LayerConfig.(*softMaxLayerConfig)
+	if !ok {
+		panic("invalid LayerConfig for softMaxLayerConfig")
 	}
 
 	n := def.Input.Size()
-	return &softmaxLayer{def.Input, volume.Dimensions{1, 1, n}, nil, nil, []float64{}}
+	return &softmaxLayer{
+		conf:   conf,
+		inDim:  def.Input,
+		outDim: volume.Dimensions{X: 1, Y: 1, Z: n},
+		inVol:  nil,
+		outVol: nil,
+		es:     []float64{},
+	}
+}
+
+// NewSoftmaxLayerConfig creates a new LayerConfig config with the given options.
+func NewSoftmaxLayerConfig(classes int, opts ...LayerOptionFunc) LayerConfig {
+	if classes <= 0 {
+		panic("class count must be greater than 0")
+	}
+
+	conf := &softMaxLayerConfig{
+		Classes: classes,
+	}
+	for i := 0; i < len(opts); i++ {
+		err := opts[i](conf)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return conf
+}
+
+// softMaxLayerConfig stores the config info for softmax layers
+type softMaxLayerConfig struct {
+	Classes int
 }
 
 type softmaxLayer struct {
+	conf   *softMaxLayerConfig
 	inDim  volume.Dimensions
 	outDim volume.Dimensions
 

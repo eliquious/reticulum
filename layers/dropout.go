@@ -14,7 +14,7 @@ func NewDropoutLayer(def LayerDef) Layer {
 	}
 
 	// Cast layer config
-	conf, ok := def.LayerConfig.(DropoutLayerConfig)
+	conf, ok := def.LayerConfig.(*DropoutLayerConfig)
 	if !ok {
 		panic(fmt.Errorf("Invalid layer config: expected DropoutLayerConfig got %T", conf))
 	}
@@ -29,7 +29,7 @@ type DropoutLayerConfig struct {
 }
 
 type dropoutLayer struct {
-	config DropoutLayerConfig
+	config *DropoutLayerConfig
 
 	input   volume.Dimensions
 	output  volume.Dimensions
