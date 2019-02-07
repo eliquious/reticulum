@@ -19,7 +19,7 @@ func TestWithInitialValue(t *testing.T) {
 	type test struct {
 		name string
 		want float64
-		fn   VolumeOptionFunc
+		fn   OptionFunc
 	}
 	tests := []test{
 		{"Initializing with Zero", 0.0, WithInitialValue(0.0)},
@@ -31,7 +31,7 @@ func TestWithInitialValue(t *testing.T) {
 		tests = append(tests, test{name: fmt.Sprintf("Initializing with random[%d] %v", i, v), want: v, fn: WithInitialValue(v)})
 	}
 
-	opts := &VolumeOptions{}
+	opts := &Options{}
 	for _, tt := range tests {
 		opts.HasInitialValue = false
 		opts.InitialValue = -1.0
@@ -96,11 +96,11 @@ func TestWithWeights(t *testing.T) {
 func TestWithZeros(t *testing.T) {
 	tests := []struct {
 		name string
-		fn   VolumeOptionFunc
+		fn   OptionFunc
 	}{
 		{"With Zeros", WithZeros()},
 	}
-	opts := &VolumeOptions{}
+	opts := &Options{}
 	for _, tt := range tests {
 		opts.Zero = false
 		opts.HasInitialValue = false
@@ -123,15 +123,15 @@ func TestWithZeros(t *testing.T) {
 func TestNewVolume(t *testing.T) {
 	type args struct {
 		dim      Dimensions
-		optFuncs []VolumeOptionFunc
+		optFuncs []OptionFunc
 	}
 	tests := []struct {
 		name string
 		args args
 		want *Volume
 	}{
-		{"NewVolumeWithZeros", args{Dimensions{1, 1, 25}, []VolumeOptionFunc{WithZeros()}}, NewVolume(Dimensions{1, 1, 25}, WithZeros())},
-		{"NewVolumeWithInitialValue", args{Dimensions{1, 1, 25}, []VolumeOptionFunc{WithInitialValue(0.5)}}, NewVolume(Dimensions{1, 1, 25}, WithInitialValue(0.5))},
+		{"NewVolumeWithZeros", args{Dimensions{1, 1, 25}, []OptionFunc{WithZeros()}}, NewVolume(Dimensions{1, 1, 25}, WithZeros())},
+		{"NewVolumeWithInitialValue", args{Dimensions{1, 1, 25}, []OptionFunc{WithInitialValue(0.5)}}, NewVolume(Dimensions{1, 1, 25}, WithInitialValue(0.5))},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

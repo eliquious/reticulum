@@ -5,7 +5,12 @@ import (
 	"math/rand"
 )
 
-// Dimentions represents the volumetric size of the data.
+// NewDimensions creates a new Dimension struct
+func NewDimensions(x, y, z int) Dimensions {
+	return Dimensions{x, y, z}
+}
+
+// Dimensions represents the volumetric size of the data.
 type Dimensions struct {
 	X, Y, Z int
 }
@@ -20,48 +25,48 @@ func (d *Dimensions) Clone() Dimensions {
 	return Dimensions{d.X, d.Y, d.Z}
 }
 
-// VolumeOptions stores volume options
-type VolumeOptions struct {
+// Options stores volume options
+type Options struct {
 	Zero            bool
 	HasInitialValue bool
 	InitialValue    float64
 	Weights         []float64
 }
 
-// VolumeOptionFunc modifies the VolumeOptions when creating a new Volume.
-type VolumeOptionFunc func(*VolumeOptions)
+// OptionFunc modifies the Options when creating a new Volume.
+type OptionFunc func(*Options)
 
 // WithInitialValue sets the initial values of the Volume.
-func WithInitialValue(value float64) VolumeOptionFunc {
-	return func(opts *VolumeOptions) {
+func WithInitialValue(value float64) OptionFunc {
+	return func(opts *Options) {
 		opts.HasInitialValue = true
 		opts.InitialValue = value
 	}
 }
 
 // WithZeros sets the initial values of the Volume to zero.
-func WithZeros() VolumeOptionFunc {
-	return func(opts *VolumeOptions) {
+func WithZeros() OptionFunc {
+	return func(opts *Options) {
 		opts.HasInitialValue = true
 		opts.Zero = true
 	}
 }
 
 // WithWeights initializes the Volume with the given weights.
-func WithWeights(w []float64) VolumeOptionFunc {
-	return func(opts *VolumeOptions) {
+func WithWeights(w []float64) OptionFunc {
+	return func(opts *Options) {
 		opts.Weights = w
 	}
 }
 
 // NewVolume creates a new Volume of the given size and options.
-func NewVolume(dim Dimensions, optFuncs ...VolumeOptionFunc) *Volume {
+func NewVolume(dim Dimensions, optFuncs ...OptionFunc) *Volume {
 	n := dim.Size()
 	w := make([]float64, n, n)
 	dw := make([]float64, n, n)
 
 	// Update opts
-	opts := &VolumeOptions{}
+	opts := &Options{}
 	for _, optFn := range optFuncs {
 		optFn(opts)
 	}
