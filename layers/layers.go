@@ -55,6 +55,7 @@ type LayerDef struct {
 
 // Layer represents a layer in the neural network.
 type Layer interface {
+	Type() LayerType
 	Forward(vol *volume.Volume, training bool) *volume.Volume
 	Backward()
 	GetResponse() []LayerResponse

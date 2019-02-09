@@ -58,6 +58,26 @@ type softMaxLayerConfig struct {
 	Classes int
 }
 
+// GetSoftMaxPrediction returns the argmax prediction for the softmax layer.
+func GetSoftMaxPrediction(layer Layer) int {
+	// this is a convenience function for returning the argmax
+	// prediction, assuming the last layer of the net is a softmax
+	softmax, ok := layer.(*softmaxLayer)
+	if !ok {
+		panic("expected Softmax layer")
+	}
+
+	p := softmax.outVol.Weights()
+	maxv, maxi := p[0], 0
+	for index := 0; index < len(p); index++ {
+		if p[index] > maxv {
+			maxv = p[index]
+			maxi = index
+		}
+	}
+	return maxi
+}
+
 type softmaxLayer struct {
 	conf   *softMaxLayerConfig
 	inDim  volume.Dimensions
