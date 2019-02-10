@@ -15,6 +15,8 @@ const (
 // Network is the neural network interface.
 type Network interface {
 	Size() int
+	Layers() []layers.Layers
+
 	Forward(vol *volume.Volume, training bool) *volume.Volume
 	Backward(index int) float64
 	GetCostLoss(vol *volume.Volume, index int) float64
@@ -86,6 +88,10 @@ func (n *network) Size() int {
 	return len(n.layers)
 }
 
+func (n *network) Layers() []layers.Layers {
+	return n.layers
+}
+
 func (n *network) Forward(vol *volume.Volume, training bool) *volume.Volume {
 	actions := n.layers[0].Forward(vol, training)
 	for index := 1; index < len(n.layers); index++ {
@@ -143,12 +149,12 @@ func (n *network) GetResponse() []layers.LayerResponse {
 }
 
 // MultiDimensionalLoss computes the total loss for each of the values given.
-func (n *network) MultiDimensionalLoss(losses []float64) float64 {
+func (n *network) MultiDimensionalLoss(y []float64) float64 {
 	lossLayer, ok := n.layers[n.Size()-1].(layers.RegressionLossLayer)
 	if !ok {
 		panic("MultiDimensionalLoss assumes a Regression layer is the last layer in the network")
 	}
-	return lossLayer.MultiDimensionalLoss(losses)
+	return lossLayer.MultiDimensionalLoss(y)
 }
 
 func (n *network) DimensionalLoss(index int, value float64) float64 {

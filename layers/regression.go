@@ -79,7 +79,6 @@ func (l *regressionLayer) MultiDimensionalLoss(y []float64) float64 {
 		l.inVol.SetGradByIndex(i, dY)
 		loss += 0.5 * dY * dY
 	}
-
 	return loss
 }
 
