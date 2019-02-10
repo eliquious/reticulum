@@ -3,7 +3,7 @@ package reticulum
 import "time"
 
 type Trainer interface {
-	Train()
+	Train(vol *volume.Volume, lossFn LossFunc) TrainingResults
 }
 
 func NewTrainer(net Network, opts ...OptionFunc) Trainer {
