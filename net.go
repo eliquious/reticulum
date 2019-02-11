@@ -15,7 +15,7 @@ const (
 // Network is the neural network interface.
 type Network interface {
 	Size() int
-	Layers() []layers.Layers
+	Layers() []layers.Layer
 
 	Forward(vol *volume.Volume, training bool) *volume.Volume
 	Backward(index int) float64
@@ -88,7 +88,7 @@ func (n *network) Size() int {
 	return len(n.layers)
 }
 
-func (n *network) Layers() []layers.Layers {
+func (n *network) Layers() []layers.Layer {
 	return n.layers
 }
 

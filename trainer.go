@@ -1,6 +1,11 @@
 package reticulum
 
-import "time"
+import (
+	"github.com/eliquious/reticulum/layers"
+	"github.com/eliquious/reticulum/volume"
+	"math"
+	"time"
+)
 
 type Trainer interface {
 	Train(vol *volume.Volume, lossFn LossFunc) TrainingResults
@@ -22,7 +27,7 @@ func NewTrainer(net Network, opts ...OptionFunc) Trainer {
 	if _, ok := l[net.Size()-1].(layers.RegressionLossLayer); ok {
 		isRegression = true
 	}
-	return &trainer{net, baseOpts, 0, []float64{}, []float64{}, isRegression}
+	return &trainer{net, baseOpts, 0, [][]float64{}, [][]float64{}, isRegression}
 }
 
 type trainer struct {
@@ -102,23 +107,73 @@ func (t *trainer) Train(vol *volume.Volume, lossFunc LossFunc) TrainingResults {
 				}
 
 				// raw batch gradient
-				gij := (l2Grad + l1Grad + g[j]) / t.opts.BatchSize
+				gij := (l2Grad + l1Grad + g[j]) / float64(t.opts.BatchSize)
 
 				meth := t.opts.Method
-				gsumi, xsumi := t.gsum[i], xsumi[i]
+				gsumi, xsumi := t.gsum[i], t.xsum[i]
 				if meth == Adam {
-					// TODO: Adam
+
+					// update biased first moment estimate
+					gsumi[j] = gsumi[j]*t.opts.Beta1 + (1-t.opts.Beta1)*gij
+
+					// update biased second moment estimate
+					xsumi[j] = xsumi[j]*t.opts.Beta2 + (1-t.opts.Beta2)*gij*gij
+
+					// correct bias first moment estimate
+					biasCorr1 := gsumi[j] * (1 - math.Pow(t.opts.Beta1, float64(t.k)))
+
+					// correct bias second moment estimate
+					biasCorr2 := xsumi[j] * (1 - math.Pow(t.opts.Beta2, float64(t.k)))
+
+					dx := -t.opts.LearningRate * biasCorr1 / (math.Sqrt(biasCorr2) + t.opts.Eps)
+					p[j] += dx
 				} else if meth == Adagrad {
-					// TODO: Adagrad
+					// update biased first moment estimate
+					gsumi[j] = gsumi[j] + gij*gij
+
+					dx := -t.opts.LearningRate / (math.Sqrt(gsumi[j]) + t.opts.Eps) * gij
+					p[j] += dx
 				} else if meth == Windowgrad {
-					// TODO: Windowgrad
+					// this is adagrad but with a moving window weighted average
+					// so the gradient is not accumulated over the entire history of the run.
+					// it's also referred to as Idea #1 in Zeiler paper on Adadelta. Seems reasonable to me!
+					gsumi[j] = t.opts.Ro*gsumi[j] + (1-t.opts.Ro)*gij*gij
+
+					// eps added for better conditioning
+					dx := -t.opts.LearningRate / math.Sqrt(gsumi[j]+t.opts.Eps) * gij
+					p[j] += dx
 				} else if meth == Adadelta {
-					// TODO: Adadelta
+					gsumi[j] = t.opts.Ro*gsumi[j] + (1-t.opts.Ro)*gij*gij
+					dx := -math.Sqrt((xsumi[j]+t.opts.Eps)/(gsumi[j]+t.opts.Eps)) * gij
+					xsumi[j] = t.opts.Ro*xsumi[j] + (1-t.opts.Ro)*dx*dx // yes, xsum lags behind gsum by 1.
+					p[j] += dx
 				} else if meth == Netsterov {
-					// TODO: Netsterov
+					dx := gsumi[j]
+					gsumi[j] = gsumi[j]*t.opts.Momentum + t.opts.LearningRate*gij
+					dx = t.opts.Momentum*dx - (1.0+t.opts.Momentum)*gsumi[j]
+					p[j] += dx
 				} else {
+
 					// Assume SGD
+					if t.opts.Momentum > 0.0 {
+						// momentum update
+
+						// step
+						dx := t.opts.Momentum*gsumi[j] - t.opts.LearningRate*gij
+
+						// back this up for next iteration of momentum
+						gsumi[j] = dx
+
+						// apply corrected gradient
+						p[j] += dx
+					} else {
+						// vanilla sgd
+						p[j] += -t.opts.LearningRate * gij
+					}
 				}
+
+				// zero out gradient so that we can begin accumulating anew
+				g[j] = 0.0
 			}
 		}
 	}
